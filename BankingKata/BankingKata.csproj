@@ -40,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Account.cs" />
+    <Compile Include="AccountProperties.cs" />
     <Compile Include="BankChargeDebitEntry.cs" />
     <Compile Include="ChequeDebitEntry.cs" />
     <Compile Include="ATMDebitEntry.cs" />
@@ -52,6 +53,7 @@
     <Compile Include="Money.cs" />
     <Compile Include="IPrinter.cs" />
     <Compile Include="OverdraftLimitExceededException.cs" />
+    <Compile Include="OverdraftLimits.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="CreditEntry.cs" />
     <Compile Include="BalanceCalculatingVisitor.cs" />

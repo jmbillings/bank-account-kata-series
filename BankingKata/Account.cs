@@ -5,18 +5,14 @@ namespace BankingKata
     public class Account
     {
         private readonly ILedger _ledger;
-        private Money _hardLimit = new Money(-1000);
-        private Money _softLimit = new Money(-200);
-        private Money _bankCharge = new Money(15m);
+        private readonly AccountProperties _accountProperties;
 
         public Account(ILedger ledger, Money hardLimit, Money softLimit, Money bankCharge)
         {
             _ledger = ledger;
-            _hardLimit = hardLimit;
-            _softLimit = softLimit;
-            _bankCharge = bankCharge;
+            _accountProperties = new AccountProperties(bankCharge, new OverdraftLimits(hardLimit, softLimit));
 
-            if (_hardLimit > _softLimit)
+            if (hardLimit > softLimit)
                 throw new ArgumentOutOfRangeException("Account Hard limit must be below the Soft limit");
         }
 
@@ -38,12 +34,12 @@ namespace BankingKata
 
         public void Withdraw(DebitEntry debitEntry)
         {
-            if (debitEntry.ApplyTo(CalculateBalance()) < _hardLimit)
+            if (_accountProperties.ExceedsHardLimit(debitEntry.ApplyTo(CalculateBalance())))
                 throw new OverdraftLimitExceededException("Overdraft limit would be exceeded");
 
-            if (debitEntry.ApplyTo(CalculateBalance()) < _softLimit)
+            if (_accountProperties.ExceedsSoftLimit(debitEntry.ApplyTo(CalculateBalance())))
             {
-                DebitEntry bankCharge = new BankChargeDebitEntry(DateTime.UtcNow, _bankCharge);
+                DebitEntry bankCharge = _accountProperties.OverdraftBankCharge();
                 _ledger.Record(bankCharge);
             }
 
