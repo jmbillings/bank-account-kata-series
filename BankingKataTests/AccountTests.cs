@@ -87,5 +87,36 @@ namespace BankingKataTests
         
             ledger.DidNotReceive().Record(myCheque);
         }
+
+        [Test]
+        public void SoftLimitExceededAppliesCharge()
+        {
+            var expectedBalance = new Money(0m);
+            var ledger = Substitute.For<ILedger>();
+            var money = new Money(201m);
+            var account = new Account(ledger);
+            ledger.Accept(Arg.Any<BalanceCalculatingVisitor>(), new Money(0m)).Returns(expectedBalance);
+            var myCheque = new ChequeDebitEntry(new DateTime(2015, 07, 13), money, 100001);
+            account.Withdraw(myCheque);
+
+            ledger.Received().Record(myCheque);
+            ledger.Received().Record(Arg.Any<BankChargeDebitEntry>());  
+        }
+
+        [Test]
+        public void HardLimitCanBeExceededByCharge()
+        {
+            var expectedBalance = new Money(0m);
+            var ledger = Substitute.For<ILedger>();
+            var money = new Money(990m);
+            var account = new Account(ledger);
+            ledger.Accept(Arg.Any<BalanceCalculatingVisitor>(), new Money(0m)).Returns(expectedBalance);
+            var myCheque = new ChequeDebitEntry(new DateTime(2015, 07, 13), money, 100001);
+
+            Assert.DoesNotThrow(() => account.Withdraw(myCheque));
+
+            ledger.Received().Record(myCheque);
+            ledger.Received().Record(Arg.Any<BankChargeDebitEntry>()); 
+        }
     }
 }
