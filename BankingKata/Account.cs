@@ -6,6 +6,8 @@ namespace BankingKata
     {
         private readonly ILedger _ledger;
         private readonly static Money _hardLimit = new Money(-1000);
+        private readonly static Money _softLimit = new Money(-200);
+        private readonly static Money _bankCharge = new Money(15m);
 
         public Account(ILedger ledger)
         {
@@ -32,6 +34,13 @@ namespace BankingKata
         {
             if (debitEntry.ApplyTo(CalculateBalance()) < _hardLimit)
                 throw new OverdraftLimitExceededException("Overdraft limit would be exceeded");
+
+            if (debitEntry.ApplyTo(CalculateBalance()) < _softLimit)
+            {
+                DebitEntry bankCharge = new BankChargeDebitEntry(DateTime.UtcNow, _bankCharge);
+                _ledger.Record(bankCharge);
+            }
+
             _ledger.Record(debitEntry);
         }
 
