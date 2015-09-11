@@ -5,6 +5,7 @@ namespace BankingKata
     public class Account
     {
         private readonly ILedger _ledger;
+        private readonly static Money _hardLimit = new Money(-1000);
 
         public Account(ILedger ledger)
         {
@@ -29,6 +30,8 @@ namespace BankingKata
 
         public void Withdraw(DebitEntry debitEntry)
         {
+            if (debitEntry.ApplyTo(CalculateBalance()) < _hardLimit)
+                throw new OverdraftLimitExceededException("Overdraft limit would be exceeded");
             _ledger.Record(debitEntry);
         }
 
