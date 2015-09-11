@@ -5,17 +5,23 @@ namespace BankingKata
     public class Account
     {
         private readonly ILedger _ledger;
-        private readonly static Money _hardLimit = new Money(-1000);
-        private readonly static Money _softLimit = new Money(-200);
-        private readonly static Money _bankCharge = new Money(15m);
+        private Money _hardLimit = new Money(-1000);
+        private Money _softLimit = new Money(-200);
+        private Money _bankCharge = new Money(15m);
 
-        public Account(ILedger ledger)
+        public Account(ILedger ledger, Money hardLimit, Money softLimit, Money bankCharge)
         {
             _ledger = ledger;
+            _hardLimit = hardLimit;
+            _softLimit = softLimit;
+            _bankCharge = bankCharge;
+
+            if (_hardLimit > _softLimit)
+                throw new ArgumentOutOfRangeException("Account Hard limit must be below the Soft limit");
         }
 
         public Account()
-            : this(new Ledger())
+            : this(new Ledger(), new Money(-1000), new Money(-200), new Money(15))
         {
         }
 

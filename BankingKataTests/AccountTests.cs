@@ -1,4 +1,5 @@
-﻿using BankingKata;
+﻿using System.Runtime.InteropServices;
+using BankingKata;
 using NSubstitute;
 using NUnit.Framework;
 using System;
@@ -13,7 +14,7 @@ namespace BankingKataTests
         {
             var ledger = Substitute.For<ILedger>();
             var money = new Money(3m);
-            var account = new Account(ledger);
+            var account = new Account(ledger, new Money(-1000), new Money(-200), new Money(15));
 
             account.Deposit(DateTime.Now, money);
 
@@ -27,7 +28,7 @@ namespace BankingKataTests
             var expectedBalance = new Money(0m);
             var ledger = Substitute.For<ILedger>();
             var money = new Money(3m);
-            var account = new Account(ledger);
+            var account = new Account(ledger, new Money(-1000), new Money(-200), new Money(15));
             ledger.Accept(Arg.Any<BalanceCalculatingVisitor>(), new Money(0m)).Returns(expectedBalance);
             var debitEntry = new ATMDebitEntry(DateTime.Now, money);
             account.Withdraw(debitEntry);
@@ -41,7 +42,7 @@ namespace BankingKataTests
             var expectedBalance = new Money(0m);
             var ledger = Substitute.For<ILedger>();
             var money = new Money(3m);
-            var account = new Account(ledger);
+            var account = new Account(ledger, new Money(-1000), new Money(-200), new Money(15));
             ledger.Accept(Arg.Any<BalanceCalculatingVisitor>(), new Money(0m)).Returns(expectedBalance);
             var myCheque = new ChequeDebitEntry(new DateTime(2015, 07, 13), money, 100001);
             account.Withdraw(myCheque);
@@ -53,7 +54,7 @@ namespace BankingKataTests
         public void CalculateBalanceTotalsAllDepositsMadeToTheAccount()
         {
             var ledger = Substitute.For<ILedger>();
-            var account = new Account(ledger);
+            var account = new Account(ledger, new Money(-1000), new Money(-200), new Money(15));
 
             account.CalculateBalance();
 
@@ -66,7 +67,7 @@ namespace BankingKataTests
             var expectedBalance = new Money(13m);
             var ledger = Substitute.For<ILedger>();
             ledger.Accept(Arg.Any<BalanceCalculatingVisitor>(), new Money(0m)).Returns(expectedBalance);
-            var account = new Account(ledger);
+            var account = new Account(ledger, new Money(-1000), new Money(-200), new Money(15));
 
             var actualBalance = account.CalculateBalance();
 
@@ -79,7 +80,7 @@ namespace BankingKataTests
             var expectedBalance = new Money(0m);
             var ledger = Substitute.For<ILedger>();
             var money = new Money(1002m);
-            var account = new Account(ledger);
+            var account = new Account(ledger, new Money(-1000), new Money(-200), new Money(15));
             ledger.Accept(Arg.Any<BalanceCalculatingVisitor>(), new Money(0m)).Returns(expectedBalance);
             var myCheque = new ChequeDebitEntry(new DateTime(2015, 07, 13), money, 100001);
 
@@ -94,7 +95,7 @@ namespace BankingKataTests
             var expectedBalance = new Money(0m);
             var ledger = Substitute.For<ILedger>();
             var money = new Money(201m);
-            var account = new Account(ledger);
+            var account = new Account(ledger, new Money(-1000), new Money(-200), new Money(15));
             ledger.Accept(Arg.Any<BalanceCalculatingVisitor>(), new Money(0m)).Returns(expectedBalance);
             var myCheque = new ChequeDebitEntry(new DateTime(2015, 07, 13), money, 100001);
             account.Withdraw(myCheque);
@@ -108,8 +109,8 @@ namespace BankingKataTests
         {
             var expectedBalance = new Money(0m);
             var ledger = Substitute.For<ILedger>();
-            var money = new Money(990m);
-            var account = new Account(ledger);
+            var money = new Money(99m);
+            var account = new Account(ledger, new Money(-100), new Money(-20), new Money(15));
             ledger.Accept(Arg.Any<BalanceCalculatingVisitor>(), new Money(0m)).Returns(expectedBalance);
             var myCheque = new ChequeDebitEntry(new DateTime(2015, 07, 13), money, 100001);
 
@@ -117,6 +118,14 @@ namespace BankingKataTests
 
             ledger.Received().Record(myCheque);
             ledger.Received().Record(Arg.Any<BankChargeDebitEntry>()); 
+        }
+
+        [Test]
+        public void CannotCreateAccountWithInvalidLimits()
+        {
+            var ledger = Substitute.For<ILedger>();
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () => new Account(ledger, new Money(-10), new Money(-20), new Money(10)));
         }
     }
 }
